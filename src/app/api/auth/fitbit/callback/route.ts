@@ -13,49 +13,25 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Construct URLSearchParams
     const params = new URLSearchParams({
       client_id: process.env.FITBIT_CLIENT_ID || "",
       grant_type: "authorization_code",
       redirect_uri: `${process.env.NEXT_PUBLIC_URL}/api/auth/fitbit/callback`,
       code,
-      code_verifier: code_verifier.value || "", // ここで `RequestCookie` を `string` に変換
-    }).toString();
+      code_verifier: code_verifier.value || "",
+    });
 
+    // Request token from Fitbit API
     const tokenResponse = await axios.post(
       "https://api.fitbit.com/oauth2/token",
       params.toString(),
       {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
-        },
-      }
-    );
-
-    const token = tokenResponse.data.access_token;
-    console.log("Access Token:", token);
-  } catch (error: any) {
-    console.error(
-      "Error obtaining token:",
-      error.response?.data || error.message
-    );
-    return NextResponse.redirect("/");
-  }
-
-  try {
-    const params = new URLSearchParams({
-      client_id: process.env.FITBIT_CLIENT_ID || "",
-      grant_type: "authorization_code",
-      redirect_uri: `${process.env.NEXT_PUBLIC_URL}/api/auth/fitbit/callback`,
-      code,
-      code_verifier: code_verifier.value || "", // ここで `RequestCookie` を `string` に変換
-    }).toString();
-
-    const tokenResponse = await axios.post(
-      "https://api.fitbit.com/oauth2/token",
-      params.toString(),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: `Basic ${Buffer.from(
+            `${process.env.FITBIT_CLIENT_ID}:${process.env.FITBIT_CLIENT_SECRET}`
+          ).toString("base64")}`,
         },
       }
     );
